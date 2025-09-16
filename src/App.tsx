@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { generatePastelColor } from './utils/pastelColor';
 import { Box, Button, Card, Checkbox, Dialog, Flex, Grid, Select, Strong, Text, TextField } from '@radix-ui/themes';
-import { Todo, Category, TodoState, CategoryState } from './types';
+import { Todo, Category } from './types';
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -194,7 +194,7 @@ function App() {
                   backgroundColor: categories.find((category: Category) => category.id === todo.categoryId)?.color,
                 }}
               >
-                <Flex gap="3" align="center" justify="space-between">
+                <Flex gap="3" align="center" justify="between">
                   <Flex gap="3" align="center">
                     <Checkbox
                       size="3"
