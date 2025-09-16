@@ -5,9 +5,9 @@ import { Todo, Category } from '../types';
 interface TodoItemProps {
   todo: Todo;
   categories: Category[];
-  onToggle: (id: string) => void;
-  onCategoryChange: (todoId: string, categoryId: string) => void;
-  onDelete: (id: string) => void;
+  onToggle: (id: string) => Promise<void>;
+  onCategoryChange: (todoId: string, categoryId: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
 export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelete }: TodoItemProps) => {
@@ -17,9 +17,14 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
     setDeleteConfirmOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    onDelete(todo.id);
-    setDeleteConfirmOpen(false);
+  const handleDeleteConfirm = async () => {
+    try {
+      await onDelete(todo.id);
+      setDeleteConfirmOpen(false);
+    } catch (error) {
+      console.error('Failed to delete todo:', error);
+      // Error is handled by the parent component
+    }
   };
 
   const getCategoryColor = () => {
@@ -37,7 +42,17 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
       >
         <Flex gap="3" align="center" justify="between">
           <Flex gap="3" align="center">
-            <Checkbox size="3" checked={todo.done} onCheckedChange={() => onToggle(todo.id)} />
+            <Checkbox
+              size="3"
+              checked={todo.done}
+              onCheckedChange={async () => {
+                try {
+                  await onToggle(todo.id);
+                } catch (error) {
+                  console.error('Failed to toggle todo:', error);
+                }
+              }}
+            />
             <Box>
               <Text
                 as="span"
@@ -51,7 +66,13 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
             </Box>
             <Select.Root
               value={todo.categoryId?.toString()}
-              onValueChange={(value) => onCategoryChange(todo.id, value)}
+              onValueChange={async (value) => {
+                try {
+                  await onCategoryChange(todo.id, value);
+                } catch (error) {
+                  console.error('Failed to update todo category:', error);
+                }
+              }}
             >
               <Select.Trigger />
               <Select.Content>
