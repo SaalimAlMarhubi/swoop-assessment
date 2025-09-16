@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { generatePastelColor } from './utils/pastelColor';
-import { Box, Card, Checkbox, Flex, Grid, Select, Strong, Text, TextField } from '@radix-ui/themes';
+import { Box, Button, Card, Checkbox, Flex, Grid, Select, Strong, Text, TextField } from '@radix-ui/themes';
 
 function App() {
   const [todos, setTodos] = useState<any>([]);
@@ -40,6 +40,23 @@ function App() {
         return todo;
       });
       setTodos(updatedTodos);
+    }
+  };
+
+  const deleteTodo = async (id: any) => {
+    try {
+      const response = await fetch(`http://localhost:3001/todos/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const updatedTodos = todos.filter((todo: any) => todo.id !== id);
+        setTodos(updatedTodos);
+      } else {
+        console.error('Failed to delete todo');
+      }
+    } catch (error) {
+      console.error('Error deleting todo:', error);
     }
   };
 
@@ -173,42 +190,54 @@ function App() {
                 backgroundColor: categories.find((category: any) => category.id === todo.categoryId)?.color,
               }}
             >
-              <Flex gap="3" align="center">
-                <Checkbox
-                  size="3"
-                  checked={todo.done}
-                  onCheckedChange={() => {
-                    toggleTodo(todo.id);
-                  }}
-                />
-                <Box>
-                  <Text
-                    as="span"
+              <Flex gap="3" align="center" justify="space-between">
+                <Flex gap="3" align="center">
+                  <Checkbox
                     size="3"
-                    style={{
-                      color: 'black',
+                    checked={todo.done}
+                    onCheckedChange={() => {
+                      toggleTodo(todo.id);
                     }}
+                  />
+                  <Box>
+                    <Text
+                      as="span"
+                      size="3"
+                      style={{
+                        color: 'black',
+                      }}
+                    >
+                      <Strong> {todo.text}</Strong>
+                    </Text>
+                  </Box>
+                  <Select.Root
+                    value={todo.categoryId?.toString()}
+                    onValueChange={(value) => onTodoCategoryChange(value, todo.id.toString())}
                   >
-                    <Strong> {todo.text}</Strong>
-                  </Text>
-                </Box>
-                <Select.Root
-                  value={todo.categoryId?.toString()}
-                  onValueChange={(value) => onTodoCategoryChange(value, todo.id.toString())}
+                    <Select.Trigger />
+                    <Select.Content>
+                      <Select.Group>
+                        {categories.map((category: any) => {
+                          return (
+                            <Select.Item key={category.id} value={category.id.toString()}>
+                              {category.name}
+                            </Select.Item>
+                          );
+                        })}
+                      </Select.Group>
+                    </Select.Content>
+                  </Select.Root>
+                </Flex>
+                <Button
+                  size="2"
+                  variant="solid"
+                  color="red"
+                  onClick={() => {
+                    deleteTodo(todo.id);
+                  }}
                 >
-                  <Select.Trigger />
-                  <Select.Content>
-                    <Select.Group>
-                      {categories.map((category: any) => {
-                        return (
-                          <Select.Item key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </Select.Item>
-                        );
-                      })}
-                    </Select.Group>
-                  </Select.Content>
-                </Select.Root>
+                  🗑️
+                </Button>
               </Flex>
             </Card>
           );

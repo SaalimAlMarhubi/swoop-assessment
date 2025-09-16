@@ -1,39 +1,50 @@
 {
   "todos": [
     {
-      "id": "1",
-      "text": "Buy groceries",
+      "id": "1758022144300",
+      "text": "Do food shopping",
       "done": false,
-      "categoryId": "1"
+      "categoryId": "1758022111249"
     },
     {
-      "id": "2",
-      "text": "Walk",
+      "id": "1758022166060",
+      "text": "Call Mum",
       "done": false,
-      "categoryId": "2"
+      "categoryId": "1758022122139"
     },
     {
-      "id": "3",
-      "text": "Finish project report",
+      "id": "1758022176310",
+      "text": "Finish work report",
       "done": false,
-      "categoryId": "3"
+      "categoryId": "1758022128011"
+    },
+    {
+      "id": "1758022496623",
+      "text": "Go Gym",
+      "done": false,
+      "categoryId": "1758022131789"
     }
   ],
   "categories": [
     {
-      "id": "1",
+      "id": "1758022111249",
       "name": "Groceries",
-      "color": "#FFB3BA"
+      "color": "#afbbf8"
     },
     {
-      "id": "2",
+      "id": "1758022122139",
       "name": "Personal",
-      "color": "#BAFFC9"
+      "color": "#e1e4b7"
     },
     {
-      "id": "3",
+      "id": "1758022128011",
       "name": "Work",
-      "color": "#BAE1FF"
+      "color": "#b8b884"
+    },
+    {
+      "id": "1758022131789",
+      "name": "Health",
+      "color": "#a3af80"
     }
   ]
 }
