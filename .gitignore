@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Yarn Berry cache
+.yarn/cache
+.yarn/install-state.gz
+.pnp.*
+
+# Development strategy and notes
+.cursorrules
