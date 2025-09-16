@@ -1,137 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { generatePastelColor } from './utils/pastelColor';
 import { Box, Button, Card, Checkbox, Dialog, Flex, Grid, Select, Strong, Text, TextField } from '@radix-ui/themes';
-import { Todo, Category } from './types';
+import { Todo } from './types';
+import { useTodos } from './hooks/useTodos';
+import { useCategories } from './hooks/useCategories';
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [todoText, setTodoText] = useState<string>('');
   const [categoryText, setCategoryText] = useState<string>('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
   const [todoToDelete, setTodoToDelete] = useState<Todo | null>(null);
 
-  const addTodo = async () => {
-    const response = await fetch('http://localhost:3001/todos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id: Date.now().toString(), text: todoText, done: false }),
-    });
-    const todo = await response.json();
-    setTodos([...todos, todo]);
-  };
+  // Custom hooks
+  const { todos, addTodo, toggleTodo, updateTodoCategory, deleteTodo } = useTodos();
+  const { categories, addCategory } = useCategories();
 
-  const toggleTodo = async (id: string) => {
-    const todo = todos.find((todo: Todo) => todo.id === id);
-
-    if (todo) {
-      const response = await fetch(`http://localhost:3001/todos/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...todo, done: !todo.done }),
-      });
-      const updatedTodo = await response.json();
-      const updatedTodos = todos.map((todo: Todo) => {
-        if (todo.id === updatedTodo.id) {
-          return updatedTodo;
-        }
-        return todo;
-      });
-      setTodos(updatedTodos);
+  const handleAddTodo = async () => {
+    if (todoText.trim()) {
+      // Use the first available category or empty string if none exist
+      const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
+      await addTodo(todoText, defaultCategoryId);
+      setTodoText('');
     }
   };
 
-  const deleteTodo = async (id: string) => {
-    try {
-      const response = await fetch(`http://localhost:3001/todos/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        const updatedTodos = todos.filter((todo: Todo) => todo.id !== id);
-        setTodos(updatedTodos);
-      } else {
-        console.error('Failed to delete todo');
-      }
-    } catch (error) {
-      console.error('Error deleting todo:', error);
+  const handleAddCategory = async () => {
+    if (categoryText.trim()) {
+      await addCategory(categoryText);
+      setCategoryText('');
     }
-  };
-
-  const addCategory = async () => {
-    const response = await fetch('http://localhost:3001/categories', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: Date.now().toString(),
-        name: categoryText,
-        color: generatePastelColor(),
-      }),
-    });
-    const category = await response.json();
-    setCategories([...categories, category]);
   };
 
   const onCreateTodoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      addTodo();
+      handleAddTodo();
     }
   };
 
   const onCreateNewCategoryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      addCategory();
+      handleAddCategory();
     }
   };
 
   const onTodoCategoryChange = async (value: string, todoId: string) => {
-    const todo = todos.find((todo: Todo) => todo.id === todoId);
-
-    if (todo) {
-      const response = await fetch(`http://localhost:3001/todos/${todoId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...todo, categoryId: value }),
-      });
-      const updatedTodo = await response.json();
-      const updatedTodos = todos.map((todo: Todo) => {
-        if (todo.id === updatedTodo.id) {
-          return updatedTodo;
-        }
-        return todo;
-      });
-      setTodos(updatedTodos);
-    }
+    await updateTodoCategory(todoId, value);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('http://localhost:3001/todos');
-      const data = await response.json();
-
-      setTodos(data);
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('http://localhost:3001/categories');
-      const data = await response.json();
-
-      setCategories(data);
-    };
-    fetchData();
-  }, []);
 
   return (
     <>
@@ -147,7 +61,7 @@ function App() {
               onKeyDown={onCreateNewCategoryKeyDown}
             />
           </TextField.Root>
-          {categories?.map((category: Category) => {
+          {categories?.map((category) => {
             return (
               <Card
                 my="2"
@@ -185,13 +99,13 @@ function App() {
             />
           </TextField.Root>
 
-          {todos.map((todo: Todo) => {
+          {todos.map((todo) => {
             return (
               <Card
                 my="2"
                 key={todo.id}
                 style={{
-                  backgroundColor: categories.find((category: Category) => category.id === todo.categoryId)?.color,
+                  backgroundColor: categories.find((category) => category.id === todo.categoryId)?.color,
                 }}
               >
                 <Flex gap="3" align="center" justify="between">
@@ -221,7 +135,7 @@ function App() {
                       <Select.Trigger />
                       <Select.Content>
                         <Select.Group>
-                          {categories.map((category: Category) => {
+                          {categories.map((category) => {
                             return (
                               <Select.Item key={category.id} value={category.id.toString()}>
                                 {category.name}
