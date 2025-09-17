@@ -169,16 +169,24 @@ function App() {
               Loading todos...
             </Text>
           ) : (
-            todos.map((todo) => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                categories={categories}
-                onToggle={toggleTodo}
-                onCategoryChange={onTodoCategoryChange}
-                onDelete={deleteTodo}
-              />
-            ))
+            // Sort todos: incomplete first, then completed
+            todos
+              .sort((a, b) => {
+                // If both have same completion status, maintain original order
+                if (a.done === b.done) return 0;
+                // Incomplete todos come first (false < true)
+                return a.done ? 1 : -1;
+              })
+              .map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  categories={categories}
+                  onToggle={toggleTodo}
+                  onCategoryChange={onTodoCategoryChange}
+                  onDelete={deleteTodo}
+                />
+              ))
           )}
         </Box>
       </Grid>

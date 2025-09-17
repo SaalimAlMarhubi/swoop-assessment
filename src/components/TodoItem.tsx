@@ -58,7 +58,9 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
                 as="span"
                 size="3"
                 style={{
-                  color: 'black',
+                  color: todo.done ? '#666' : 'black',
+                  textDecoration: todo.done ? 'line-through' : 'none',
+                  opacity: todo.done ? 0.7 : 1,
                 }}
               >
                 <Strong> {todo.text}</Strong>
