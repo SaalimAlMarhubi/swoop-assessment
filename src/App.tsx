@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 import { Box, Grid, Text, TextField, Button } from '@radix-ui/themes';
 import { useTodos } from './hooks/useTodos';
@@ -26,7 +26,7 @@ function App() {
   } = useTodos();
   const { categories, addCategory, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
-  const handleAddTodo = async () => {
+  const handleAddTodo = useCallback(async () => {
     // Clear previous validation errors
     setValidationErrors((prev) => ({ ...prev, todo: undefined }));
 
@@ -46,9 +46,9 @@ function App() {
       console.error('Failed to add todo:', error);
       // Error is already handled in the hook, but we can add additional UI feedback here
     }
-  };
+  }, [todoText, categories, addTodo]);
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = useCallback(async () => {
     // Clear previous validation errors
     setValidationErrors((prev) => ({ ...prev, category: undefined }));
 
@@ -69,43 +69,68 @@ function App() {
       console.error('Failed to add category:', error);
       // Error is already handled in the hook, but we can add additional UI feedback here
     }
-  };
+  }, [categoryText, categories, addCategory]);
 
-  const onCreateTodoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleAddTodo();
-    }
-  };
+  const onCreateTodoKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleAddTodo();
+      }
+    },
+    [handleAddTodo],
+  );
 
-  const handleTodoTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setTodoText(value);
+  const handleTodoTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setTodoText(value);
 
-    // Clear validation error when user starts typing
-    if (validationErrors.todo) {
-      setValidationErrors((prev) => ({ ...prev, todo: undefined }));
-    }
-  };
+      // Clear validation error when user starts typing
+      if (validationErrors.todo) {
+        setValidationErrors((prev) => ({ ...prev, todo: undefined }));
+      }
+    },
+    [validationErrors.todo],
+  );
 
-  const handleCategoryTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setCategoryText(value);
+  const handleCategoryTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setCategoryText(value);
 
-    // Clear validation error when user starts typing
-    if (validationErrors.category) {
-      setValidationErrors((prev) => ({ ...prev, category: undefined }));
-    }
-  };
+      // Clear validation error when user starts typing
+      if (validationErrors.category) {
+        setValidationErrors((prev) => ({ ...prev, category: undefined }));
+      }
+    },
+    [validationErrors.category],
+  );
 
-  const onCreateNewCategoryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleAddCategory();
-    }
-  };
+  const onCreateNewCategoryKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleAddCategory();
+      }
+    },
+    [handleAddCategory],
+  );
 
-  const onTodoCategoryChange = async (value: string, todoId: string) => {
-    await updateTodoCategory(todoId, value);
-  };
+  const onTodoCategoryChange = useCallback(
+    async (value: string, todoId: string) => {
+      await updateTodoCategory(todoId, value);
+    },
+    [updateTodoCategory],
+  );
+
+  // Memoise sorted todos to prevent unnecessary re-sorting
+  const sortedTodos = useMemo(() => {
+    return todos.sort((a, b) => {
+      // If both have same completion status, maintain original order
+      if (a.done === b.done) return 0;
+      // Incomplete todos come first (false < true)
+      return a.done ? 1 : -1;
+    });
+  }, [todos]);
 
   return (
     <>
@@ -169,24 +194,16 @@ function App() {
               Loading todos...
             </Text>
           ) : (
-            // Sort todos: incomplete first, then completed
-            todos
-              .sort((a, b) => {
-                // If both have same completion status, maintain original order
-                if (a.done === b.done) return 0;
-                // Incomplete todos come first (false < true)
-                return a.done ? 1 : -1;
-              })
-              .map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  categories={categories}
-                  onToggle={toggleTodo}
-                  onCategoryChange={onTodoCategoryChange}
-                  onDelete={deleteTodo}
-                />
-              ))
+            sortedTodos.map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                categories={categories}
+                onToggle={toggleTodo}
+                onCategoryChange={onTodoCategoryChange}
+                onDelete={deleteTodo}
+              />
+            ))
           )}
         </Box>
       </Grid>

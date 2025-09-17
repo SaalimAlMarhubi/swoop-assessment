@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Box, Button, Card, Checkbox, Dialog, Flex, Select, Strong, Text } from '@radix-ui/themes';
 import { Todo, Category } from '../types';
 
@@ -10,14 +10,14 @@ interface TodoItemProps {
   onDelete: (id: string) => Promise<void>;
 }
 
-export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelete }: TodoItemProps) => {
+export const TodoItem = memo(({ todo, categories, onToggle, onCategoryChange, onDelete }: TodoItemProps) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = useCallback(() => {
     setDeleteConfirmOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     try {
       await onDelete(todo.id);
       setDeleteConfirmOpen(false);
@@ -25,11 +25,11 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
       console.error('Failed to delete todo:', error);
       // Error is handled by the parent component
     }
-  };
+  }, [onDelete, todo.id]);
 
-  const getCategoryColor = () => {
+  const getCategoryColor = useMemo(() => {
     return categories.find((category) => category.id === todo.categoryId)?.color || '#f0f0f0';
-  };
+  }, [categories, todo.categoryId]);
 
   return (
     <>
@@ -37,7 +37,7 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
         my="2"
         key={todo.id}
         style={{
-          backgroundColor: getCategoryColor(),
+          backgroundColor: getCategoryColor,
         }}
       >
         <Flex gap="3" align="center" justify="between">
@@ -116,4 +116,4 @@ export const TodoItem = ({ todo, categories, onToggle, onCategoryChange, onDelet
       </Dialog.Root>
     </>
   );
-};
+});

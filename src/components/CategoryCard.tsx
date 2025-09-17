@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Box, Card, Flex, Strong, Text } from '@radix-ui/themes';
 import { Category } from '../types';
 
@@ -5,7 +6,7 @@ interface CategoryCardProps {
   category: Category;
 }
 
-export const CategoryCard = ({ category }: CategoryCardProps) => {
+export const CategoryCard = memo(({ category }: CategoryCardProps) => {
   return (
     <Card
       my="2"
@@ -29,4 +30,4 @@ export const CategoryCard = ({ category }: CategoryCardProps) => {
       </Flex>
     </Card>
   );
-};
+});
