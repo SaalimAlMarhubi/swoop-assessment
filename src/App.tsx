@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Box, Grid, Text, TextField } from '@radix-ui/themes';
+import { Box, Grid, Text, TextField, Button } from '@radix-ui/themes';
 import { useTodos } from './hooks/useTodos';
 import { useCategories } from './hooks/useCategories';
 import { TodoItem, CategoryCard } from './components';
@@ -68,16 +68,21 @@ function App() {
       <Grid columns="2" gap="3" width="auto">
         <Box width="auto">
           <h2>Categories</h2>
-          <TextField.Root>
-            <TextField.Input
-              placeholder="Create a new category"
-              value={categoryText}
-              size="3"
-              onChange={(e) => setCategoryText(e.target.value)}
-              onKeyDown={onCreateNewCategoryKeyDown}
-              disabled={categoriesLoading}
-            />
-          </TextField.Root>
+          <Box style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <TextField.Root style={{ flex: 1 }}>
+              <TextField.Input
+                placeholder="Create a new category"
+                value={categoryText}
+                size="3"
+                onChange={(e) => setCategoryText(e.target.value)}
+                onKeyDown={onCreateNewCategoryKeyDown}
+                disabled={categoriesLoading}
+              />
+            </TextField.Root>
+            <Button onClick={handleAddCategory} disabled={categoriesLoading || !categoryText.trim()} size="3">
+              Add
+            </Button>
+          </Box>
           {categoriesError && (
             <Text color="red" size="2" style={{ marginTop: '8px' }}>
               Error: {categoriesError}
@@ -93,16 +98,21 @@ function App() {
         </Box>
         <Box width="auto">
           <h2>Todo List</h2>
-          <TextField.Root>
-            <TextField.Input
-              placeholder="Type your todo here"
-              value={todoText}
-              size="3"
-              onChange={(e) => setTodoText(e.target.value)}
-              onKeyDown={onCreateTodoKeyDown}
-              disabled={todosLoading}
-            />
-          </TextField.Root>
+          <Box style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <TextField.Root style={{ flex: 1 }}>
+              <TextField.Input
+                placeholder="Type your todo here"
+                value={todoText}
+                size="3"
+                onChange={(e) => setTodoText(e.target.value)}
+                onKeyDown={onCreateTodoKeyDown}
+                disabled={todosLoading}
+              />
+            </TextField.Root>
+            <Button onClick={handleAddTodo} disabled={todosLoading || !todoText.trim()} size="3">
+              Add
+            </Button>
+          </Box>
           {todosError && (
             <Text color="red" size="2" style={{ marginTop: '8px' }}>
               Error: {todosError}
