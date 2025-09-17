@@ -4,6 +4,7 @@ import { Todo } from '../types';
 const API_BASE_URL = 'http://localhost:3001';
 
 export const useTodos = () => {
+  // State management for todos data
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

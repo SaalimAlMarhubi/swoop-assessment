@@ -11,12 +11,15 @@ interface TodoItemProps {
 }
 
 export const TodoItem = memo(({ todo, categories, onToggle, onCategoryChange, onDelete }: TodoItemProps) => {
+  // State for delete confirmation dialog
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  // Handle delete button click - open confirmation dialog
   const handleDeleteClick = useCallback(() => {
     setDeleteConfirmOpen(true);
   }, []);
 
+  // Handle confirmed deletion
   const handleDeleteConfirm = useCallback(async () => {
     try {
       await onDelete(todo.id);
@@ -27,6 +30,7 @@ export const TodoItem = memo(({ todo, categories, onToggle, onCategoryChange, on
     }
   }, [onDelete, todo.id]);
 
+  // Memoise category colour lookup for performance
   const getCategoryColor = useMemo(() => {
     return categories.find((category) => category.id === todo.categoryId)?.color || '#f0f0f0';
   }, [categories, todo.categoryId]);

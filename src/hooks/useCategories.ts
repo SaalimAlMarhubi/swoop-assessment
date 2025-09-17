@@ -5,6 +5,7 @@ import { generatePastelColor } from '../utils/pastelColor';
 const API_BASE_URL = 'http://localhost:3001';
 
 export const useCategories = () => {
+  // State management for categories data
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

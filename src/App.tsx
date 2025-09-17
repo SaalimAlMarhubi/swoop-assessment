@@ -7,14 +7,17 @@ import { TodoItem, CategoryCard } from './components';
 import { validateTodoText, validateCategoryName } from './utils/validation';
 
 function App() {
+  // Form state for todo and category inputs
   const [todoText, setTodoText] = useState<string>('');
   const [categoryText, setCategoryText] = useState<string>('');
+
+  // Validation error state for user feedback
   const [validationErrors, setValidationErrors] = useState<{
     todo?: string;
     category?: string;
   }>({});
 
-  // Custom hooks
+  // Custom hooks for data management
   const {
     todos,
     addTodo,
@@ -24,13 +27,15 @@ function App() {
     isLoading: todosLoading,
     error: todosError,
   } = useTodos();
+
   const { categories, addCategory, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
+  // Handle adding a new todo with validation
   const handleAddTodo = useCallback(async () => {
     // Clear previous validation errors
     setValidationErrors((prev) => ({ ...prev, todo: undefined }));
 
-    // Validate input
+    // Validate input before submission
     const validation = validateTodoText(todoText);
     if (!validation.isValid) {
       setValidationErrors((prev) => ({ ...prev, todo: validation.error }));
@@ -41,13 +46,14 @@ function App() {
       // Use the first available category or empty string if none exist
       const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
       await addTodo(todoText.trim(), defaultCategoryId);
-      setTodoText('');
+      setTodoText(''); // Clear input on success
     } catch (error) {
       console.error('Failed to add todo:', error);
       // Error is already handled in the hook, but we can add additional UI feedback here
     }
   }, [todoText, categories, addTodo]);
 
+  // Handle adding a new category with validation and duplicate checking
   const handleAddCategory = useCallback(async () => {
     // Clear previous validation errors
     setValidationErrors((prev) => ({ ...prev, category: undefined }));
@@ -55,7 +61,7 @@ function App() {
     // Get existing category names for duplicate checking
     const existingCategoryNames = categories.map((cat) => cat.name);
 
-    // Validate input
+    // Validate input before submission
     const validation = validateCategoryName(categoryText, existingCategoryNames);
     if (!validation.isValid) {
       setValidationErrors((prev) => ({ ...prev, category: validation.error }));
@@ -64,13 +70,14 @@ function App() {
 
     try {
       await addCategory(categoryText.trim());
-      setCategoryText('');
+      setCategoryText(''); // Clear input on success
     } catch (error) {
       console.error('Failed to add category:', error);
       // Error is already handled in the hook, but we can add additional UI feedback here
     }
   }, [categoryText, categories, addCategory]);
 
+  // Event handlers for keyboard interactions
   const onCreateTodoKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -80,6 +87,16 @@ function App() {
     [handleAddTodo],
   );
 
+  const onCreateNewCategoryKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        handleAddCategory();
+      }
+    },
+    [handleAddCategory],
+  );
+
+  // Input change handlers with validation error clearing
   const handleTodoTextChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
@@ -106,15 +123,7 @@ function App() {
     [validationErrors.category],
   );
 
-  const onCreateNewCategoryKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        handleAddCategory();
-      }
-    },
-    [handleAddCategory],
-  );
-
+  // Handle todo category changes
   const onTodoCategoryChange = useCallback(
     async (value: string, todoId: string) => {
       await updateTodoCategory(todoId, value);
@@ -123,6 +132,7 @@ function App() {
   );
 
   // Memoise sorted todos to prevent unnecessary re-sorting
+  // Incomplete todos appear first, completed todos at the bottom
   const sortedTodos = useMemo(() => {
     return todos.sort((a, b) => {
       // If both have same completion status, maintain original order
