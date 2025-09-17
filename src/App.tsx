@@ -4,10 +4,15 @@ import { Box, Grid, Text, TextField, Button } from '@radix-ui/themes';
 import { useTodos } from './hooks/useTodos';
 import { useCategories } from './hooks/useCategories';
 import { TodoItem, CategoryCard } from './components';
+import { validateTodoText, validateCategoryName } from './utils/validation';
 
 function App() {
   const [todoText, setTodoText] = useState<string>('');
   const [categoryText, setCategoryText] = useState<string>('');
+  const [validationErrors, setValidationErrors] = useState<{
+    todo?: string;
+    category?: string;
+  }>({});
 
   // Custom hooks
   const {
@@ -22,34 +27,73 @@ function App() {
   const { categories, addCategory, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
   const handleAddTodo = async () => {
-    if (todoText.trim()) {
-      try {
-        // Use the first available category or empty string if none exist
-        const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
-        await addTodo(todoText, defaultCategoryId);
-        setTodoText('');
-      } catch (error) {
-        console.error('Failed to add todo:', error);
-        // Error is already handled in the hook, but we can add additional UI feedback here
-      }
+    // Clear previous validation errors
+    setValidationErrors((prev) => ({ ...prev, todo: undefined }));
+
+    // Validate input
+    const validation = validateTodoText(todoText);
+    if (!validation.isValid) {
+      setValidationErrors((prev) => ({ ...prev, todo: validation.error }));
+      return;
+    }
+
+    try {
+      // Use the first available category or empty string if none exist
+      const defaultCategoryId = categories.length > 0 ? categories[0].id : '';
+      await addTodo(todoText.trim(), defaultCategoryId);
+      setTodoText('');
+    } catch (error) {
+      console.error('Failed to add todo:', error);
+      // Error is already handled in the hook, but we can add additional UI feedback here
     }
   };
 
   const handleAddCategory = async () => {
-    if (categoryText.trim()) {
-      try {
-        await addCategory(categoryText);
-        setCategoryText('');
-      } catch (error) {
-        console.error('Failed to add category:', error);
-        // Error is already handled in the hook, but we can add additional UI feedback here
-      }
+    // Clear previous validation errors
+    setValidationErrors((prev) => ({ ...prev, category: undefined }));
+
+    // Get existing category names for duplicate checking
+    const existingCategoryNames = categories.map((cat) => cat.name);
+
+    // Validate input
+    const validation = validateCategoryName(categoryText, existingCategoryNames);
+    if (!validation.isValid) {
+      setValidationErrors((prev) => ({ ...prev, category: validation.error }));
+      return;
+    }
+
+    try {
+      await addCategory(categoryText.trim());
+      setCategoryText('');
+    } catch (error) {
+      console.error('Failed to add category:', error);
+      // Error is already handled in the hook, but we can add additional UI feedback here
     }
   };
 
   const onCreateTodoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleAddTodo();
+    }
+  };
+
+  const handleTodoTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTodoText(value);
+
+    // Clear validation error when user starts typing
+    if (validationErrors.todo) {
+      setValidationErrors((prev) => ({ ...prev, todo: undefined }));
+    }
+  };
+
+  const handleCategoryTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCategoryText(value);
+
+    // Clear validation error when user starts typing
+    if (validationErrors.category) {
+      setValidationErrors((prev) => ({ ...prev, category: undefined }));
     }
   };
 
@@ -74,7 +118,8 @@ function App() {
                 placeholder="Create a new category"
                 value={categoryText}
                 size="3"
-                onChange={(e) => setCategoryText(e.target.value)}
+                maxLength={50}
+                onChange={handleCategoryTextChange}
                 onKeyDown={onCreateNewCategoryKeyDown}
                 disabled={categoriesLoading}
               />
@@ -83,9 +128,9 @@ function App() {
               Add
             </Button>
           </Box>
-          {categoriesError && (
+          {(categoriesError || validationErrors.category) && (
             <Text color="red" size="2" style={{ marginTop: '8px' }}>
-              Error: {categoriesError}
+              Error: {validationErrors.category || categoriesError}
             </Text>
           )}
           {categoriesLoading ? (
@@ -104,7 +149,8 @@ function App() {
                 placeholder="Type your todo here"
                 value={todoText}
                 size="3"
-                onChange={(e) => setTodoText(e.target.value)}
+                maxLength={200}
+                onChange={handleTodoTextChange}
                 onKeyDown={onCreateTodoKeyDown}
                 disabled={todosLoading}
               />
@@ -113,9 +159,9 @@ function App() {
               Add
             </Button>
           </Box>
-          {todosError && (
+          {(todosError || validationErrors.todo) && (
             <Text color="red" size="2" style={{ marginTop: '8px' }}>
-              Error: {todosError}
+              Error: {validationErrors.todo || todosError}
             </Text>
           )}
           {todosLoading ? (
